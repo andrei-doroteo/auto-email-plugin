@@ -1,0 +1,11 @@
+{
+    "name": "doroteodigital/auto-email",
+    "description": "WordPress plugin for sending templated emails.",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Doroteodigital\\AutoEmail\\": "src/"
+        }
+    },
+    "require": {}
+}
