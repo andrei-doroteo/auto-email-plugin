@@ -1,11 +1,19 @@
 {
-    "name": "doroteodigital/auto-email",
-    "description": "WordPress plugin for sending templated emails.",
-    "type": "project",
-    "autoload": {
-        "psr-4": {
-            "Doroteodigital\\AutoEmail\\": "src/"
-        }
-    },
-    "require": {}
+	"name": "doroteodigital/auto-email",
+	"description": "WordPress plugin for sending templated emails.",
+	"type": "project",
+	"autoload": {
+		"psr-4": {
+			"DoroteoDigital\\AutoEmail\\": "src/"
+		},
+		"autoload-dev": {
+			"psr-4": {
+				"AutoSMS\\Tests\\": "test/"
+			}
+		}
+	},
+	"require": {},
+	"require-dev": {
+		"phpunit/phpunit": "^12"
+	}
 }
