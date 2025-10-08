@@ -2,6 +2,14 @@
 
 By: DoroteoDigital
 
+This project uses PHP version 8.4.
+
+Dependencies
+
+```
+- PHPUnit 12
+```
+
 Directory Structure
 
 ```
