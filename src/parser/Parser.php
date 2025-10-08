@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace parser;
+namespace DoroteoDigital\AutoEmail\parser;
 
 class Parser {
 
