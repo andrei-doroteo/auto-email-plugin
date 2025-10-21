@@ -42,11 +42,21 @@ class Parser
      */
     public function parse(string $file, array $vars, array &$unset = []): string
     {
-        // TODO
-        /**
-         * Draft implementation: preg_replace('/{\s?{\s?\w*\s?}\s?}/', "Replacement", $file)
-         */
-        return ""; // stub
-    }
 
+        return preg_replace_callback("/{\s?{\s?\w+\s?}\s?}/",
+            function ($matches) use ($vars, &$unset) {
+
+                $match = $matches[0];
+                $label = trim($match, " \n\r\t\v\x00{}");
+
+                if (!isset($vars[$label])) {
+
+                    if (!in_array($label, $unset, true)) $unset[] = $label;
+                    return $match;
+                }
+                return $vars[$label];
+            },
+            $file);
+
+    }
 }
