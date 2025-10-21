@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome Email</title>
+</head>
+<body>
+    <h1>Hello John!</h1>
+    
+    <p>Thank you for signing up on January 1, 1999.</p>
+    
+    <p>Your account details:</p>
+    <ul>
+        <li>Username: john123</li>
+        <li>Email: john_doe123@domain.com</li>
+        <li>Account Type: Premium</li>
+    </ul>
+    
+    <p>Your verification code is: <strong>12345678</strong></p>
+    
+    <p>Best regards,<br>
+    Company Team</p>
+    
+    <footer>
+        <small>&copy; 1999 Company. All rights reserved.</small>
+    </footer>
+</body>
+</html>

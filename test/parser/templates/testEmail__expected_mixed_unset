@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome Email</title>
+</head>
+<body>
+    <h1>Hello John!</h1>
+    
+    <p>Thank you for signing up on {{ date }}.</p>
+    
+    <p>Your account details:</p>
+    <ul>
+        <li>Username: { {username} }</li>
+        <li>Email: { { email}}</li>
+        <li>Account Type: {{account_type } }</li>
+    </ul>
+    
+    <p>Your verification code is: <strong>{ {verification_code }}</strong></p>
+    
+    <p>Best regards,<br>
+    {{company_name}} Team</p>
+    
+    <footer>
+        <small>&copy; {{year}} {{company_name}}. All rights reserved.</small>
+    </footer>
+</body>
+</html>

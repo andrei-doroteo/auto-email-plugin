@@ -1,9 +1,7 @@
 <?php declare(strict_types=1);
 
-use PHPUnit\Framework\Attributes\Before;
 use PHPUnit\Framework\TestCase;
 use DoroteoDigital\AutoEmail\parser\Parser;
-use DoroteoDigital\AutoEmail\exceptions\MissingTemplateVariableException;
 use \PHPUnit\Framework\Attributes\DataProvider;
 
 final class ParserTest extends TestCase
@@ -13,6 +11,7 @@ final class ParserTest extends TestCase
     protected function setUp(): void
     {
         $this->parser = new Parser();
+        $this->test_email = file_get_contents(__DIR__ . "/templates/testEmail__input");
     }
 
     public static function singleTemplateVariableProvider(): array
@@ -35,13 +34,6 @@ final class ParserTest extends TestCase
     }
 
     #[DataProvider('singleTemplateVariableProvider')]
-    public function testParseOneStringEmptyArray(string $template_var): void
-    {
-        $this->expectException(MissingTemplateVariableException::class);
-        $this->parser->parse($template_var, []);
-    }
-
-    #[DataProvider('singleTemplateVariableProvider')]
     public function testParseOneStringValidArray(string $template_var): void
     {
 
@@ -56,4 +48,63 @@ final class ParserTest extends TestCase
         $parsed = $this->parser->parse("Before " . $template_var . " After", ['var' => "Hello World!"]);
         $this->assertSame("Before Hello World! After", $parsed);
     }
+
+    public function testParseHtmlAllSet(): void
+    {
+        $expected = file_get_contents(__DIR__ . "/templates/testEmail__expected");
+
+        $actual = $this->parser->parse($this->test_email, [
+            'name' => 'John',
+            'date' => 'January 1, 1999',
+            'username' => 'john123',
+            'email' => 'john_doe123@domain.com',
+            'account_type' => 'Premium',
+            'verification_code' => '12345678',
+            'company_name' => 'Company',
+            'year' => '1999',
+        ]);
+
+        $this->assertSame($expected, $actual);
+    }
+
+    public function testParseHtmlAllUnset(): void
+    {
+
+        $unset = [];
+        $actual = $this->parser->parse($this->test_email, [],
+            $unset);
+
+        $this->assertSame($this->test_email, $actual);
+        $this->assertSame([
+            'name',
+            'date',
+            'username',
+            'email',
+            'account_type',
+            'verification_code',
+            'company_name',
+            'year',
+        ], $unset);
+    }
+
+    public function testParseHtmlMixedUnset(): void
+    {
+
+        $unset = [];
+        $expected = file_get_contents(__DIR__ . "/templates/testEmail__expected_mixed_unset");
+        $actual = $this->parser->parse($this->test_email, ['name' => 'John'],
+            $unset);
+
+        $this->assertSame($expected, $actual);
+        $this->assertSame([
+            'date',
+            'username',
+            'email',
+            'account_type',
+            'verification_code',
+            'company_name',
+            'year',
+        ], $unset);
+    }
+
 }
