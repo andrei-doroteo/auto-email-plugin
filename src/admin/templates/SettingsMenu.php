@@ -1,0 +1,3 @@
+<div id="auto-email-settings-menu">
+    Loading...
+</div>
