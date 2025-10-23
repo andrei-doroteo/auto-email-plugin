@@ -1,0 +1,30 @@
+{
+	"name": "auto-email",
+	"version": "1.0.0",
+	"description": "Descrpition goes here",
+	"main": "build/index.js",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "wp-scripts start",
+		"build": "wp-scripts build"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/andrei-doroteo/auto-email.git"
+	},
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/andrei-doroteo/auto-email/issues"
+	},
+	"homepage": "https://github.com/andrei-doroteo/auto-email#readme",
+	"devDependencies": {
+		"@wordpress/scripts": "^30.26.0"
+	},
+	"dependencies": {
+		"@wordpress/dom-ready": "^4.33.0"
+	}
+}
