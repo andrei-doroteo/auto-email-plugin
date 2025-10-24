@@ -1,2 +1,6 @@
 /vendor/
 .idea/
+.cursor/
+node_modules/
+build/
+.temp/
