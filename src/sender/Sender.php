@@ -1,6 +1,6 @@
 <?php
 
-namespace sender;
+namespace DoroteoDigital\AutoEmail\sender;
 
 class Sender {
 
