@@ -9,7 +9,8 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"start": "wp-scripts start",
-		"build": "wp-scripts build"
+		"build": "wp-scripts build",
+		"tc": "tsc --noEmit --strict true"
 	},
 	"repository": {
 		"type": "git",
@@ -22,11 +23,14 @@
 	},
 	"homepage": "https://github.com/andrei-doroteo/auto-email#readme",
 	"devDependencies": {
-		"@wordpress/scripts": "30.26.0",
-		"prettier": "3.6.2"
+		"@types/react": "^19.2.7",
+		"@types/react-dom": "^19.2.3",
+		"@wordpress/scripts": "31.1.0",
+		"prettier": "3.7.4",
+		"typescript": "5.9.3"
 	},
 	"dependencies": {
-		"@wordpress/dom-ready": "4.33.0",
-		"@wordpress/element": "6.33.0"
+		"@wordpress/dom-ready": "4.36.0",
+		"@wordpress/element": "6.36.0"
 	}
 }
