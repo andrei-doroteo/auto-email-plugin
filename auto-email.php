@@ -1,6 +1,6 @@
 <?php
 /*
- * Plugin Name: EMAIL
+ * Plugin Name: GO-DIVAS | AUTO EMAIL
  */
 // TODO Create plugin header
 require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
@@ -9,7 +9,7 @@ use DoroteoDigital\AutoEmail\admin\SettingsPage;
 use DoroteoDigital\AutoEmail\api\Api;
 
 $settings_page = new SettingsPage();
-$api = new Api();
+$api           = new Api();
 function auto_email_settings( $admin_page ): void {
 	if ( 'toplevel_page_auto-email-settings' !== $admin_page ) {
 		return;
@@ -32,4 +32,13 @@ function auto_email_settings( $admin_page ): void {
 	);
 }
 
+function auto_email_styles(): void {
+	wp_enqueue_style(
+		'auto-email-css',
+		plugins_url( 'build/index.css', __FILE__ ),
+		[],
+	);
+}
+
 add_action( 'admin_enqueue_scripts', 'auto_email_settings' );
+add_action( 'admin_enqueue_scripts', 'auto_email_styles' );
