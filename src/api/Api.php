@@ -1,6 +1,6 @@
 <?php
 // TODO: This is a rough draft.
-namespace DoroteoDigital\AutoEmail\api;
+namespace DoroteoDigital\AutoEmail\Api;
 
 use DoroteoDigital\AutoEmail\parser\Parser;
 use WP_REST_Response;
@@ -9,7 +9,7 @@ use DoroteoDigital\AutoEmail\sender\Sender;
 
 class Api {
 
-	private string $base_endpoint;
+	private string $base_path;
 	private PluginOptions $plugin_options;
 	private Sender $sender;
 	private Parser $parser;
@@ -20,7 +20,7 @@ class Api {
 	 * route at initialized base_endpoint.
 	 */
 	function __construct() {
-		$this->base_endpoint  = "auto-email/v1/";
+		$this->base_path      = "/auto-email/v1";
 		$this->plugin_options = PluginOptions::getInstance();
 		$this->sender         = new Sender();
 		$this->parser         = new Parser();
@@ -31,7 +31,7 @@ class Api {
 	/**
 	 * @return void
 	 *
-	 * Register's the '/auto-email/v1/send-mail/' endpoint to the WordPress REST API.
+	 * Register's the '/auto-email/v1/send-mail' endpoint to the WordPress REST API.
 	 */
 	function register_send_email_endpoint(): void {
 
@@ -39,8 +39,8 @@ class Api {
 
 		add_action( 'rest_api_init', function () use ( $endpoint_route ) {
 
-			register_rest_route( $this->base_endpoint, $endpoint_route, [
-				'methods'             => 'POST',
+			register_rest_route( $this->base_path, $endpoint_route, [
+				'methods'             => ['POST', 'OPTIONS'],
 				'callback'            => [ $this, "send_email" ],
 				'permission_callback' => '__return_true', // public endpoint
 			] );
@@ -48,6 +48,7 @@ class Api {
 	}
 
 
+    // TODO:
 	/**
 	 * @param $request
 	 *
@@ -55,6 +56,6 @@ class Api {
 	 * and sends given email to given email address.
 	 */
 	function send_email( $request ) {
-
+		wp_send_json( [ "message" => "endpoint has been reached." ], 200 ); // stub
 	}
 }
