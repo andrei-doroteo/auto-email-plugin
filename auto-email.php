@@ -1,5 +1,11 @@
 <?php
 /*
+TODO:
+- Add conditional loading / put everything in a hook for wordpress to handle
+  conditional loading
+*/
+
+/*
  * Plugin Name: GO-DIVAS | AUTO EMAIL
  */
 // TODO Create plugin header
