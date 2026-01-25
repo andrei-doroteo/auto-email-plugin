@@ -46,5 +46,16 @@ function auto_email_styles(): void {
 	);
 }
 
+function add_cors_http_header() {
+	header('Access-Control-Allow-Origin: *');
+	header('Access-Control-Allow-Methods: POST, OPTIONS');
+	header('Access-Control-Allow-Headers: Content-Type, Authorization');
+	header('Access-Control-Max-Age: 86400'); // 24hrs
+}
+
+add_action('init', 'add_cors_http_header');
+
+$api = new Api();
+
 add_action( 'admin_enqueue_scripts', 'auto_email_settings' );
 add_action( 'admin_enqueue_scripts', 'auto_email_styles' );
