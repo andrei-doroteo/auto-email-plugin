@@ -1,14 +1,14 @@
 <?php
 /*
-TODO:
-- Add conditional loading / put everything in a hook for wordpress to handle
-  conditional loading
-*/
-
-/*
  * Plugin Name: GO-DIVAS | AUTO EMAIL
  */
-// TODO Create plugin header
+
+/* TODO: - Create plugin header
+ *       - Add conditional loading so everything
+ *         doesn't run every WordPress request.
+ *       - Use hooks for WordPress to handle conditional loading.
+*/
+
 require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 
 use DoroteoDigital\AutoEmail\admin\SettingsPage;
