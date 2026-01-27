@@ -33,12 +33,18 @@ function auto_email_settings( $admin_page ): void {
 	$asset = include $asset_file;
 
 	wp_enqueue_script(
-		'auto-email-js',
+		'autoemail-admin',
 		plugins_url( 'build/index.js', __FILE__ ),
 		$asset['dependencies'],
 		$asset['version'],
 		[ 'in_footer' => true ]
 	);
+
+	wp_localize_script( 'autoemail-admin', 'wp_autoemail', [
+		'baseUrl' => site_url(),
+		'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+		'nonce'   => wp_create_nonce( 'autoemail_settings_nonce' )
+	] );
 }
 
 function auto_email_styles(): void {
