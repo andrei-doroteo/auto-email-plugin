@@ -13,6 +13,8 @@ final class PluginOptions {
 		]
 	];
 
+	/* TODO: - Handle the case that get_option and add_option fails (returns false).
+	*/
 	private function __construct() {
 		$plugin_options = get_option( self::WP_OPTIONS_KEY );
 		if ( ! $plugin_options ) {
@@ -39,13 +41,17 @@ final class PluginOptions {
 		return $this->plugin_options['automatic_notifs']['business_owner_email'] ?? "";
 	}
 
+	/* TODO: - Handle the case that update_option fails (returns false).
+	*/
 	public function set_business_owner_email( string $email ): void {
 		$this->plugin_options['automatic_notifs']['business_owner_email'] = $email;
 		$this->save_options();
 	}
 
-	// !!! TODO: Implement a solution so all options are not
-	//           saved anytime one option is saved
+	/* TODO: - Implement a solution so all options are not
+	 *         saved anytime one option is saved
+	 *       - Handle the case that update_option fails (returns false).
+	*/
 	private function save_options(): void {
 		update_option( self::WP_OPTIONS_KEY, $this->plugin_options );
 	}
