@@ -13,9 +13,12 @@ require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 
 use DoroteoDigital\AutoEmail\admin\SettingsPage;
 use DoroteoDigital\AutoEmail\api\Api;
+use DoroteoDigital\AutoEmail\admin\AjaxHandler;
 
-$settings_page = new SettingsPage();
-$api           = new Api();
+// Initialize plugin classes
+new SettingsPage();
+new Api();
+new AjaxHandler();
 function auto_email_settings( $admin_page ): void {
 	if ( 'toplevel_page_auto-email-settings' !== $admin_page ) {
 		return;
