@@ -17,6 +17,10 @@ export function SettingsPage() {
     const { mutate, data: postResponse, reset, isSuccess, error, isPending, isIdle } = usePostWpData("/wp-admin/admin-ajax.php", ["wp-admin", "admin-ajax.php", "autoemail_save_options"]);
 
     /** Updates settings when server responds with the data.*/
+    /* TODO:
+    *       - Ensure settings is only updated once on intial fetch
+    *       - OR refactor to not use useEffect().
+    */
     useEffect(() => {
 
         if (isLoading || !isFetched || !getResponse?.data) return;
