@@ -51,7 +51,7 @@ export function SettingsPage() {
         alert("Saved Successfully.");
         reset();
     }
-    function onMutateError() {
+    function onMutateError(error: Error) {
         alert("Failed to save. Please try again.");
         console.error(error);
         reset();
