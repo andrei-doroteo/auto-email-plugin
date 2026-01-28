@@ -7,6 +7,7 @@ interface PluginSettings {
 }
 
 export function SettingsPage() {
+    // Component variables
     const [settings, setSettings] = useState<PluginSettings>({
         businessOwnerEmail: "",
     });
