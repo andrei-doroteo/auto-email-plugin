@@ -112,6 +112,7 @@ export function SettingsPage() {
                                     id="save-btn"
                                     className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                                     type="submit"
+                                    disabled={isPending}
                                 >
                                     {isPending ? "Saving..." : "Save"}
                                 </button>
