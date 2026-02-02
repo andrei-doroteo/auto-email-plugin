@@ -109,4 +109,19 @@ class Templates {
 	private static function fill_template_variables( string $template, array $template_vars, callable $fallback ): string {
 		return ""; // stub
 	}
+
+	/**
+	 * Parses template contents for template variables and adds them to an array.
+	 * Only one of each template variable will be in that array. This will result
+	 * in an array of all the available tempate variables
+	 *
+	 * This function is primarily useful in writing tests for templates.
+	 *
+	 * @param TemplateName $template
+	 *
+	 * @return void
+	 */
+	public static function get_tempalte_vars( TemplateName $template ): array {
+		return []; // stub
+	}
 }
