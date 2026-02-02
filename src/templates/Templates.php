@@ -9,6 +9,27 @@ use DoroteoDigital\AutoEmail\templates\exceptions\TemplateRenderException;
 /**
  * This file serves as an abstraction to get filled in email templates.
  */
+
+/**
+ * Enum representing available email templates.
+ *
+ * Each case holds the path to it's template file from the `src/` directory.
+ * Use this enum when calling Templates::get() to ensure type safety.
+ */
+enum TemplateName: string {
+	case CUSTOMER_REGISTRATION_NOTIFICATION = "templates/client-confirmation.template.html";
+	case OWNER_REGISTRATION_NOTIFICATION = "templates/owner-registration-confirmation.template.html";
+
+	/**
+	 * Get the file path for a given template.
+	 *
+	 * @return string Path to the template file from the `src/` directory.
+	 */
+	public function getPath(): string {
+		return $this->value;
+	}
+}
+
 class Templates {
 	/*
 	   TODO:
@@ -16,38 +37,27 @@ class Templates {
 		   for multiple template file reads in one request.
 	*/
 
-	/**
-	 * A map from the usable template names to the paths of the files from src/
-	 * @var array
-	 */
-	private const array TEMPLATES = [
-		"notifications/client" => "templates/client-confirmation.template.html",
-		"notifications/owner"  => "templates/owner-registration-confirmation.template.html",
-	];
-
 	public function __construct() {
 	}
 
 	/**
 	 * Returns the filled email template specified with $template.
-	 * - If the template does not exist an error is thrown.
 	 * - If there are template vars with no given replacement
 	 * they are replaced with $fallback.
 	 *
-	 * Example Usage: Templates::get("notifications/client", ["name" => "Jane"], function (string $s):string {return "User";});
+	 * Example Usage: Templates::get(TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION, ["name" => "Jane"], function (string $s):string {return "User";});
 	 *
-	 * @param string $template The name of the template required.
+	 * @param TemplateName $template The template enum case to use.
 	 * @param array $template_variables An associative array of key-value pairs for template vars.
 	 * @param ?callable $fallback A function that is passed all the unreplaced vars.
 	 *
 	 * @return string The rendered template with variables replaced.
 	 *
-	 * @throws TemplateNotFoundException If the requested template name doesn't exist in TEMPLATES.
 	 * @throws TemplateFileException If the template file cannot be read from disk.
 	 * @throws TemplateRenderException If template variable replacement fails.
 	 */
 	public static function get(
-		string $template,
+		TemplateName $template,
 		array $template_variables,
 		?callable $fallback = null
 	): string {
@@ -58,12 +68,8 @@ class Templates {
 			};
 		}
 
-		if ( ! isset( self::TEMPLATES[ $template ] ) ) {
-			// throw an error
-			return ""; // stub
-		}
-
 		// get file
+		Templates::get_raw_template($template->getPath());
 		// replace template vars
 		// return result
 
