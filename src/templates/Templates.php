@@ -146,7 +146,7 @@ class Templates {
 	 */
 	public function get_template_vars( TemplateName $template ): array {
 		// Get the raw template content
-		$templateContent = self::get_raw_template( $template->getPath() );
+		$templateContent = $this->get_raw_template( $template->getPath() );
 
 		// Find all template variables using regex pattern {{variable_name}}
 		// The pattern matches {{ followed by a valid variable name, followed by }}
