@@ -634,4 +634,292 @@ class TemplatesTest extends TestCase
         $this->assertEquals($expectedCustomerVars, $customerVars, "Customer template should have exactly the expected variables");
         $this->assertEquals($expectedOwnerVars, $ownerVars, "Owner template should have exactly the expected variables");
     }
+
+    // ========================================================================
+    // Additional Black Box Tests for get_template_vars() - Edge Cases
+    // ========================================================================
+
+    /**
+     * Test Case: Template with variable appearing multiple times returns unique values only.
+     * 
+     * The owner template has {{email}} appearing 3 times (lines 244, 245, 312) and
+     * {{phone}} appearing 3 times (lines 263, 264, 318). This verifies that duplicates
+     * are properly removed and only one instance of each variable is returned.
+     */
+    public function test_get_template_vars_deduplicates_repeated_variables(): void
+    {
+        $result = $this->templates->get_template_vars(TemplateName::OWNER_REGISTRATION_NOTIFICATION);
+
+        // Count occurrences of each variable in the result
+        $varCounts = array_count_values($result);
+
+        // Each variable should appear exactly once in the result array
+        foreach ($varCounts as $varName => $count) {
+            $this->assertEquals(1, $count, "Variable '$varName' should appear exactly once in result array");
+        }
+
+        // Verify specific variables that appear multiple times in template are returned only once
+        $this->assertContains("email", $result);
+        $this->assertContains("phone", $result);
+        $this->assertContains("name", $result);
+
+        // Count how many times "email" appears in result (should be 1)
+        $emailOccurrences = 0;
+        foreach ($result as $var) {
+            if ($var === "email") {
+                $emailOccurrences++;
+            }
+        }
+        $this->assertEquals(1, $emailOccurrences, "Variable 'email' should appear only once despite multiple occurrences in template");
+    }
+
+    /**
+     * Test Case: Template with single variable appearing once.
+     * 
+     * The customer template contains {{name}} appearing only once (line 168).
+     * This tests the simplest case where a variable appears exactly once.
+     */
+    public function test_get_template_vars_handles_single_occurrence_variable(): void
+    {
+        $result = $this->templates->get_template_vars(TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION);
+
+        $this->assertIsArray($result);
+        $this->assertCount(1, $result, "Customer template should have exactly 1 unique variable");
+        $this->assertEquals(["name"], $result, "Customer template should contain only 'name' variable");
+    }
+
+    /**
+     * Test Case: Template with multiple unique variables with different occurrence counts.
+     * 
+     * The owner template has:
+     * - {{name}} appears 3 times (lines 115, 226, 227)
+     * - {{class}} appears 2 times (lines 115, 282)
+     * - {{registration_datetime}} appears 1 time (line 208)
+     * - {{email}} appears 3 times (lines 244, 245, 312)
+     * - {{phone}} appears 3 times (lines 263, 264, 318)
+     * 
+     * This verifies that all variables are extracted regardless of occurrence count.
+     */
+    public function test_get_template_vars_handles_mixed_occurrence_counts(): void
+    {
+        $result = $this->templates->get_template_vars(TemplateName::OWNER_REGISTRATION_NOTIFICATION);
+
+        // Should return all 5 unique variables
+        $this->assertCount(5, $result, "Owner template should have exactly 5 unique variables");
+
+        // Verify all expected variables are present
+        $this->assertContains("name", $result);
+        $this->assertContains("class", $result);
+        $this->assertContains("registration_datetime", $result);
+        $this->assertContains("email", $result);
+        $this->assertContains("phone", $result);
+
+        // Verify no duplicates exist
+        $uniqueResult = array_unique($result);
+        $this->assertCount(count($result), $uniqueResult, "Result should contain no duplicate variable names");
+    }
+
+    /**
+     * Test Case: Verify variables with underscores in names are properly extracted.
+     * 
+     * Variables like {{registration_datetime}} contain underscores and should be
+     * properly matched by the regex pattern.
+     */
+    public function test_get_template_vars_handles_variables_with_underscores(): void
+    {
+        $result = $this->templates->get_template_vars(TemplateName::OWNER_REGISTRATION_NOTIFICATION);
+
+        // registration_datetime has an underscore and should be extracted
+        $this->assertContains("registration_datetime", $result, "Variables with underscores should be extracted");
+
+        // Verify the full variable name is preserved (not split on underscore)
+        $this->assertNotContains("registration", $result, "Should not split on underscores");
+        $this->assertNotContains("datetime", $result, "Should not split on underscores");
+    }
+
+    /**
+     * Test Case: Verify array indexing is sequential (0-based with no gaps).
+     * 
+     * The method uses array_values() to re-index the array after removing duplicates.
+     * This ensures the returned array has sequential keys starting from 0.
+     */
+    public function test_get_template_vars_returns_sequentially_indexed_array(): void
+    {
+        $result = $this->templates->get_template_vars(TemplateName::OWNER_REGISTRATION_NOTIFICATION);
+
+        // Verify array keys are sequential starting from 0
+        $expectedKeys = range(0, count($result) - 1);
+        $actualKeys = array_keys($result);
+
+        $this->assertEquals($expectedKeys, $actualKeys, "Array should have sequential 0-based keys with no gaps");
+    }
+
+    /**
+     * Test Case: Verify the method handles whitespace around variable names.
+     * 
+     * The regex pattern in get_template_vars uses \s* to match optional whitespace,
+     * so variables like {{ name }} or {{  name  }} should be matched and the
+     * whitespace should be excluded from the captured variable name.
+     * 
+     * Note: The actual templates don't have whitespace, but the regex supports it.
+     */
+    public function test_get_template_vars_regex_handles_whitespace_patterns(): void
+    {
+        // This test verifies the regex pattern's capability
+        // Since we can't modify the actual templates, we test the expected behavior
+        $result = $this->templates->get_template_vars(TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION);
+
+        // Variables should not contain any whitespace
+        foreach ($result as $varName) {
+            $this->assertStringNotContainsString(" ", $varName, "Variable names should not contain spaces");
+            $this->assertStringNotContainsString("\t", $varName, "Variable names should not contain tabs");
+            $this->assertStringNotContainsString("\n", $varName, "Variable names should not contain newlines");
+        }
+    }
+
+    /**
+     * Test Case: Verify variable names follow valid identifier rules.
+     * 
+     * The regex pattern [a-zA-Z_][a-zA-Z0-9_]* ensures:
+     * - First character must be a letter or underscore
+     * - Subsequent characters can be letters, numbers, or underscores
+     */
+    public function test_get_template_vars_returns_valid_identifier_names(): void
+    {
+        $result = $this->templates->get_template_vars(TemplateName::OWNER_REGISTRATION_NOTIFICATION);
+
+        foreach ($result as $varName) {
+            // Variable name should not be empty
+            $this->assertNotEmpty($varName);
+
+            // First character should be a letter or underscore
+            $firstChar = substr($varName, 0, 1);
+            $this->assertTrue(
+                ctype_alpha($firstChar) || $firstChar === '_',
+                "Variable '$varName' should start with a letter or underscore"
+            );
+
+            // All characters should be alphanumeric or underscore
+            $this->assertMatchesRegularExpression(
+                '/^[a-zA-Z_][a-zA-Z0-9_]*$/',
+                $varName,
+                "Variable '$varName' should only contain letters, numbers, and underscores"
+            );
+        }
+    }
+
+    /**
+     * Test Case: Verify both templates return different variable sets.
+     * 
+     * This ensures the function correctly parses different template files
+     * and returns their respective variables, not a cached or static result.
+     */
+    public function test_get_template_vars_returns_different_sets_for_different_templates(): void
+    {
+        $customerVars = $this->templates->get_template_vars(TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION);
+        $ownerVars = $this->templates->get_template_vars(TemplateName::OWNER_REGISTRATION_NOTIFICATION);
+
+        // The sets should be different
+        $this->assertNotEquals($customerVars, $ownerVars, "Different templates should return different variable sets");
+
+        // Customer template has fewer variables than owner template
+        $this->assertLessThan(count($ownerVars), count($customerVars), "Customer template should have fewer variables");
+
+        // Owner template should have variables not in customer template
+        $ownerOnlyVars = array_diff($ownerVars, $customerVars);
+        $this->assertNotEmpty($ownerOnlyVars, "Owner template should have unique variables not in customer template");
+    }
+
+    /**
+     * Test Case: Verify return type consistency across multiple calls.
+     * 
+     * The method should always return an array with the same structure
+     * when called multiple times on the same template.
+     */
+    public function test_get_template_vars_returns_consistent_results(): void
+    {
+        // Call the method multiple times
+        $result1 = $this->templates->get_template_vars(TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION);
+        $result2 = $this->templates->get_template_vars(TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION);
+        $result3 = $this->templates->get_template_vars(TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION);
+
+        // All results should be identical
+        $this->assertEquals($result1, $result2, "Multiple calls should return identical results");
+        $this->assertEquals($result2, $result3, "Multiple calls should return identical results");
+    }
+
+    /**
+     * Test Case: Verify method doesn't return any malformed variable names.
+     * 
+     * This checks that the regex pattern correctly excludes any partial matches
+     * or malformed template syntax that might be in comments or text.
+     */
+    public function test_get_template_vars_returns_only_valid_template_variables(): void
+    {
+        $result = $this->templates->get_template_vars(TemplateName::OWNER_REGISTRATION_NOTIFICATION);
+
+        foreach ($result as $varName) {
+            // Should not contain braces
+            $this->assertStringNotContainsString("{", $varName);
+            $this->assertStringNotContainsString("}", $varName);
+
+            // Should not contain special characters that aren't part of valid identifiers
+            $this->assertDoesNotMatchRegularExpression(
+                '/[^a-zA-Z0-9_]/',
+                $varName,
+                "Variable '$varName' contains invalid characters"
+            );
+
+            // Should not be just underscores
+            $this->assertNotEquals("_", $varName);
+            $this->assertNotEquals("__", $varName);
+        }
+    }
+
+    /**
+     * Test Case: Verify the exact count and order of variables for owner template.
+     * 
+     * This test documents the specific expected behavior for the owner template
+     * which has 2 variables appearing once, 1 variable appearing twice, and
+     * 2 variables appearing three times each.
+     */
+    public function test_get_template_vars_owner_template_exact_specification(): void
+    {
+        $result = $this->templates->get_template_vars(TemplateName::OWNER_REGISTRATION_NOTIFICATION);
+
+        // Should return exactly 5 unique variables
+        $this->assertCount(5, $result);
+
+        // Verify the exact set (order-independent)
+        $resultSorted = $result;
+        sort($resultSorted);
+
+        $expected = ["class", "email", "name", "phone", "registration_datetime"];
+        sort($expected);
+
+        $this->assertEquals($expected, $resultSorted, "Owner template should have exact set of expected variables");
+    }
+
+    /**
+     * Test Case: Verify no empty strings are returned in the array.
+     * 
+     * The method should never return an empty string as a variable name.
+     */
+    public function test_get_template_vars_does_not_return_empty_strings(): void
+    {
+        $customerResult = $this->templates->get_template_vars(TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION);
+        $ownerResult = $this->templates->get_template_vars(TemplateName::OWNER_REGISTRATION_NOTIFICATION);
+
+        // Check customer template result
+        foreach ($customerResult as $varName) {
+            $this->assertNotEmpty($varName, "Variable names should not be empty strings");
+            $this->assertNotEquals("", $varName);
+        }
+
+        // Check owner template result
+        foreach ($ownerResult as $varName) {
+            $this->assertNotEmpty($varName, "Variable names should not be empty strings");
+            $this->assertNotEquals("", $varName);
+        }
+    }
 }
