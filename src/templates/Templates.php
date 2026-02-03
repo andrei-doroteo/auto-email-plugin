@@ -30,6 +30,14 @@ enum TemplateName: string {
 	}
 }
 
+/**
+ * Utility class to get pre-made stringified email templates from disk.
+ *
+ *
+ * Example Usage:
+ *      $templates = new Templates(base_path);
+ *      $templates->get(TemplateName::TEMPLATE_NAME_HERE);
+ */
 class Templates {
 	/*
 	   TODO:
@@ -37,7 +45,23 @@ class Templates {
 		   for multiple template file reads in one request.
 	*/
 
-	public function __construct() {
+	/**
+	 * The base path for the template.html files.
+	 *
+	 * This is prepended to all file paths passed into
+	 * methods for this class.
+	 * @var string
+	 */
+	private string $base_path;
+
+	/**
+	 * Initializes a Templates object with the given
+	 * $base_path.
+	 *
+	 * @param string $base_path
+	 */
+	public function __construct( string $base_path ) {
+		$this->base_path = $base_path;
 	}
 
 	/**
@@ -45,7 +69,7 @@ class Templates {
 	 * - If there are template vars with no given replacement
 	 * they are replaced with $fallback.
 	 *
-	 * Example Usage: Templates::get(TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION, ["name" => "Jane"], function (string $s):string {return "User";});
+	 * Example Usage: Template->get(TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION, ["name" => "Jane"], function (string $s):string {return "User";});
 	 *
 	 * @param TemplateName $template The template enum case to use.
 	 * @param array $template_variables An associative array of key-value pairs for template vars.
@@ -56,12 +80,12 @@ class Templates {
 	 * @throws TemplateFileException If the template file cannot be read from disk.
 	 * @throws TemplateRenderException If template variable replacement fails.
 	 */
-	public static function get(
+	public function get(
 		TemplateName $template,
 		array $template_variables,
 		?callable $fallback = null
 	): string {
-		// Set default fallback if none provided
+		// Set default fallback callable if none provided
 		if ( $fallback === null ) {
 			$fallback = function ( string $var ): string {
 				return "";
@@ -69,10 +93,9 @@ class Templates {
 		}
 
 		// get file
-		Templates::get_raw_template($template->getPath());
+		$this->get_raw_template( $template->getPath() );
 		// replace template vars
 		// return result
-
 		return ""; // stub
 	}
 
@@ -88,8 +111,8 @@ class Templates {
 	 *
 	 * @throws TemplateFileException If the file doesn't exist or cannot be read.
 	 */
-	private static function get_raw_template( string $file_path ): string {
-		return file_get_contents( plugin_dir_path( __DIR__ ) . $file_path ); // stub
+	private function get_raw_template( string $file_path ): string {
+		return file_get_contents( "$this->base_path/$file_path" );
 	}
 
 	/**
@@ -106,22 +129,31 @@ class Templates {
 	 *
 	 * @throws TemplateRenderException If template variable replacement fails.
 	 */
-	private static function fill_template_variables( string $template, array $template_vars, callable $fallback ): string {
+	private function fill_template_variables( string $template, array $template_vars, callable $fallback ): string {
 		return ""; // stub
 	}
 
 	/**
 	 * Parses template contents for template variables and adds them to an array.
 	 * Only one of each template variable will be in that array. This will result
-	 * in an array of all the available tempate variables
+	 * in an array of all the available template variables
 	 *
 	 * This function is primarily useful in writing tests for templates.
 	 *
 	 * @param TemplateName $template
 	 *
-	 * @return void
+	 * @return array Array of unique template variable names (without braces).
 	 */
-	public static function get_tempalte_vars( TemplateName $template ): array {
-		return []; // stub
+	public function get_template_vars( TemplateName $template ): array {
+		// Get the raw template content
+		$templateContent = self::get_raw_template( $template->getPath() );
+
+		// Find all template variables using regex pattern {{variable_name}}
+		// The pattern matches {{ followed by a valid variable name, followed by }}
+		preg_match_all( '/\{\s*\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\s*\}/', $templateContent, $matches );
+
+		// $matches[1] contains the captured variable names without braces
+		// Return unique values only and re-index the array
+		return array_values( array_unique( $matches[1] ) );
 	}
 }
