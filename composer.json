@@ -19,6 +19,7 @@
 		"brain/monkey": "^2.6"
 	},
 	"scripts": {
-		"test": "vendor/phpunit/phpunit/phpunit test/"
+		"test": "vendor/phpunit/phpunit/phpunit test/",
+		"phpunit": "vendor/phpunit/phpunit/phpunit "
 	}
 }
