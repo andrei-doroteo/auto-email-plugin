@@ -2,12 +2,11 @@
 // TODO: This is a rough draft.
 namespace DoroteoDigital\AutoEmail\api;
 
-use DoroteoDigital\AutoEmail\parser\Parser;
 use DoroteoDigital\AutoEmail\admin\PluginOptions;
-use DoroteoDigital\AutoEmail\sender\Sender;
 use DoroteoDigital\AutoEmail\templates\exceptions\TemplateException;
 use DoroteoDigital\AutoEmail\templates\TemplateName;
 use DoroteoDigital\AutoEmail\templates\Templates;
+use WP_REST_Request;
 
 /**
  * This class must be initialized at the entry point of the plugin.
@@ -16,8 +15,6 @@ class Api {
 
 	private string $base_path;
 	private PluginOptions $plugin_options;
-	private Sender $sender;
-	private Parser $parser;
 	private Templates $templates;
 
 	/**
@@ -32,8 +29,6 @@ class Api {
 	function __construct() {
 		$this->base_path      = "/auto-email/v1";
 		$this->plugin_options = PluginOptions::getInstance();
-		$this->sender         = new Sender();
-		$this->parser         = new Parser();
 		$this->templates      = new Templates( rtrim( plugin_dir_path( __DIR__ ), '/' ) );
 
 		$this->register_send_email_endpoint();
@@ -69,13 +64,11 @@ class Api {
 	 * TODO:
 	 *      - Change endpoint to email-notify
 	 */
-	function send_email( \WP_REST_Request $request ) {
-		$data           = $request->get_params();
-		$owner_email    = '';
-		$customer_email = '';
+	function send_email( WP_REST_Request $request ): void {
+		$data = $request->get_params();
 
-		if ( ! isset( $data['first_name'], $data['last_name'], $data['email'], $data['phone'], $data['interested_in'], $data['message'] ) ) {
-			wp_send_json_error( [ "error" => "missing_fields" ], 400 );
+		if ( ! isset( $data['first_name'], $data['last_name'], $data['email'], $data['phone'], $data['class'] ) ) {
+			wp_send_json_error( [ "error" => "missing_fields", "given_fields" => $data ], 400 );
 
 			return;
 		}
@@ -87,7 +80,7 @@ class Api {
 			] );
 			$owner_email    = $this->templates->get( TemplateName::OWNER_REGISTRATION_NOTIFICATION, [
 				'name'                  => "{$data['first_name']} {$data['last_name']}",
-				'class'                 => 'Test Class',
+				'class'                 => $data['class'],
 				'registration_datetime' => date( "m-d-Y" ),
 				'email'                 => $data['email'],
 				'phone'                 => $data['phone']
@@ -96,7 +89,7 @@ class Api {
 				'fallback'
 			] );
 		} catch ( TemplateException $e ) {
-			wp_send_json_error( [ "error" => "{$e}" ], 500 );
+			wp_send_json_error( [ "error" => "$e" ], 500 );
 
 			return;
 		}
@@ -112,12 +105,12 @@ class Api {
 			return;
 		}
 
-		wp_send_json_success( [ "messgae" => "emails sent successfully." ] );
+		wp_send_json_success( [ "message" => "emails sent successfully." ] );
 
 
 	}
 
-	function fallback( string $s ) {
+	function fallback( string $s ): string {
 		return "";
 	}
 }
