@@ -41,11 +41,11 @@ class Api {
 	 */
 	function register_send_email_endpoint(): void {
 
-		$endpoint_route = "/send-email";
+		$register_form_route = "/submit/register-form";
 
-		add_action( 'rest_api_init', function () use ( $endpoint_route ) {
+		add_action( 'rest_api_init', function () use ( $register_form_route ) {
 
-			register_rest_route( $this->base_path, $endpoint_route, [
+			register_rest_route( $this->base_path, $register_form_route, [
 				'methods'             => [ 'POST', 'OPTIONS' ],
 				'callback'            => [ $this, "send_email" ],
 				'permission_callback' => '__return_true', // public endpoint
