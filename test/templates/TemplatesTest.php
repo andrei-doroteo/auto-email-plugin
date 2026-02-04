@@ -3,15 +3,14 @@
 /**
  * This file is AI generated.
  *
- * TODO: Do a manual code review on these tests.
+ * TODO: - Do a manual code review on these tests.
+ *       - 
  */
 namespace DoroteoDigital\AutoEmail\templates;
 
-use PHPUnit\Framework\TestCase;
-use DoroteoDigital\AutoEmail\templates\Templates;
-use DoroteoDigital\AutoEmail\templates\TemplateName;
-use DoroteoDigital\AutoEmail\templates\exceptions\TemplateFileException;
 use DoroteoDigital\AutoEmail\templates\exceptions\TemplateRenderException;
+use PHPUnit\Framework\TestCase;
+
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class TemplatesTest extends TestCase
@@ -34,17 +33,50 @@ class TemplatesTest extends TestCase
     }
 
     /**
+     * Helper method to generate template variables with test values.
+     * Gets the actual template variables from the template and fills them with values.
+     *
+     * @param TemplateName $template The template to get variables for
+     * @param array $customValues Optional custom values to override defaults
+     * @return array Associative array of template variables with test values
+     */
+    private function getTemplateVarsWithValues(TemplateName $template, array $customValues = []): array
+    {
+        $vars = $this->templates->get_template_vars($template);
+        $values = [];
+
+        // Provide default test values for each variable
+        foreach ($vars as $var) {
+            $values[$var] = match ($var) {
+                'name' => 'John Doe',
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+                'email' => 'test@example.com',
+                'phone' => '555-1234',
+                'class' => 'Test Class',
+                'registration_datetime' => '2026-02-01 10:00 AM',
+                default => "TestValue_$var"
+            };
+        }
+
+        // Override with custom values
+        return array_merge($values, $customValues);
+    }
+
+    /**
      * Test that get() returns a non-empty string when given a valid template name
      * and all required template variables.
      */
     public function test_get_returns_string_with_valid_template_and_variables(): void
     {
+        $vars = $this->getTemplateVarsWithValues(
+            TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
+            ['name' => 'Jane Doe']
+        );
+
         $result = $this->templates->get(
             TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
-            [
-                "first_name" => "Jane",
-                "last_name" => "Doe"
-            ]
+            $vars
         );
 
         $this->assertIsString($result);
@@ -56,18 +88,22 @@ class TemplatesTest extends TestCase
      */
     public function test_get_replaces_template_variables(): void
     {
-        $result = $this->templates->get(
+        $vars = $this->getTemplateVarsWithValues(
             TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
-            [
-                "first_name" => "John",
-                "last_name" => "Smith"
-            ]
+            ['name' => 'John Smith']
         );
 
-        $this->assertStringContainsString("John", $result);
-        $this->assertStringContainsString("Smith", $result);
-        $this->assertStringNotContainsString("{{first_name}}", $result);
-        $this->assertStringNotContainsString("{{last_name}}", $result);
+        $result = $this->templates->get(
+            TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
+            $vars
+        );
+
+        $this->assertStringContainsString("John Smith", $result);
+        // Check that template variables are replaced (no braces remain for the name variable)
+        $templateVars = $this->templates->get_template_vars(TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION);
+        foreach ($templateVars as $var) {
+            $this->assertStringNotContainsString("{{{$var}}}", $result);
+        }
     }
 
     /**
@@ -75,11 +111,10 @@ class TemplatesTest extends TestCase
      */
     public function test_get_works_with_owner_template(): void
     {
-        $result = $this->templates->get(
+        $vars = $this->getTemplateVarsWithValues(
             TemplateName::OWNER_REGISTRATION_NOTIFICATION,
             [
-                "first_name" => "Jane",
-                "last_name" => "Doe",
+                "name" => "Jane Doe",
                 "email" => "jane@example.com",
                 "phone" => "555-1234",
                 "class" => "Beginner Pole",
@@ -87,9 +122,13 @@ class TemplatesTest extends TestCase
             ]
         );
 
+        $result = $this->templates->get(
+            TemplateName::OWNER_REGISTRATION_NOTIFICATION,
+            $vars
+        );
+
         $this->assertIsString($result);
-        $this->assertStringContainsString("Jane", $result);
-        $this->assertStringContainsString("Doe", $result);
+        $this->assertStringContainsString("Jane Doe", $result);
         $this->assertStringContainsString("jane@example.com", $result);
         $this->assertStringContainsString("555-1234", $result);
         $this->assertStringContainsString("Beginner Pole", $result);
@@ -100,11 +139,10 @@ class TemplatesTest extends TestCase
      */
     public function test_get_replaces_multiple_variables(): void
     {
-        $result = $this->templates->get(
+        $vars = $this->getTemplateVarsWithValues(
             TemplateName::OWNER_REGISTRATION_NOTIFICATION,
             [
-                "first_name" => "Alice",
-                "last_name" => "Johnson",
+                "name" => "Alice Johnson",
                 "email" => "alice@test.com",
                 "phone" => "123-456-7890",
                 "class" => "Advanced Class",
@@ -112,8 +150,12 @@ class TemplatesTest extends TestCase
             ]
         );
 
-        $this->assertStringContainsString("Alice", $result);
-        $this->assertStringContainsString("Johnson", $result);
+        $result = $this->templates->get(
+            TemplateName::OWNER_REGISTRATION_NOTIFICATION,
+            $vars
+        );
+
+        $this->assertStringContainsString("Alice Johnson", $result);
         $this->assertStringContainsString("alice@test.com", $result);
         $this->assertStringContainsString("123-456-7890", $result);
         $this->assertStringContainsString("Advanced Class", $result);
@@ -137,10 +179,9 @@ class TemplatesTest extends TestCase
             [] // No variables provided
         );
 
-        // The {{first_name}} and {{last_name}} variables should be replaced with empty string
-        $this->assertStringNotContainsString("{{first_name}}", $result);
-        $this->assertStringNotContainsString("{{last_name}}", $result);
+        // All template variables should be replaced with empty string
         $this->assertStringNotContainsString("{{", $result);
+        $this->assertStringNotContainsString("}}", $result);
     }
 
     /**
@@ -156,9 +197,11 @@ class TemplatesTest extends TestCase
             }
         );
 
-        // The fallback should have been applied to missing variables
-        $this->assertStringContainsString("[MISSING: first_name]", $result);
-        $this->assertStringContainsString("[MISSING: last_name]", $result);
+        // The fallback should have been applied to all template variables
+        $templateVars = $this->templates->get_template_vars(TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION);
+        foreach ($templateVars as $var) {
+            $this->assertStringContainsString("[MISSING: $var]", $result);
+        }
     }
 
     /**
@@ -170,10 +213,7 @@ class TemplatesTest extends TestCase
 
         $this->templates->get(
             TemplateName::OWNER_REGISTRATION_NOTIFICATION,
-            [
-                "first_name" => "Test",
-                "last_name" => "User"
-            ], // Only provide first/last name, others will use fallback
+            [], // No variables provided - all will use fallback
             function (string $var) use (&$capturedVars): string {
                 $capturedVars[] = $var;
 
@@ -182,6 +222,7 @@ class TemplatesTest extends TestCase
         );
 
         // Verify that variable names don't contain braces
+        $this->assertNotEmpty($capturedVars, "Fallback should have been called for template variables");
         foreach ($capturedVars as $var) {
             $this->assertStringNotContainsString("{{", $var);
             $this->assertStringNotContainsString("}}", $var);
@@ -197,18 +238,16 @@ class TemplatesTest extends TestCase
         $result = $this->templates->get(
             TemplateName::OWNER_REGISTRATION_NOTIFICATION,
             [
-                "first_name" => "John",
-                "last_name" => "Doe",
+                "name" => "John Doe",
                 "email" => "john@example.com"
-                // phone, class, registration_datetime missing
+                // Other variables missing - will use fallback
             ],
             function (string $var): string {
                 return "[PLACEHOLDER]";
             }
         );
 
-        $this->assertStringContainsString("John", $result);
-        $this->assertStringContainsString("Doe", $result);
+        $this->assertStringContainsString("John Doe", $result);
         $this->assertStringContainsString("john@example.com", $result);
         $this->assertStringContainsString("[PLACEHOLDER]", $result);
     }
@@ -218,12 +257,16 @@ class TemplatesTest extends TestCase
      */
     public function test_get_handles_special_characters_in_values(): void
     {
-        $result = $this->templates->get(
+        $vars = $this->getTemplateVarsWithValues(
             TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
             [
-                "first_name" => "O'Brien",
-                "last_name" => "<test@example.com> & Co."
+                "name" => "O'Brien <test@example.com> & Co."
             ]
+        );
+
+        $result = $this->templates->get(
+            TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
+            $vars
         );
 
         $this->assertStringContainsString("O'Brien", $result);
@@ -235,17 +278,20 @@ class TemplatesTest extends TestCase
      */
     public function test_get_handles_empty_string_values(): void
     {
+        $vars = $this->getTemplateVarsWithValues(
+            TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
+            ["name" => ""]
+        );
+
         $result = $this->templates->get(
             TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
-            [
-                "first_name" => "",
-                "last_name" => ""
-            ]
+            $vars
         );
 
         $this->assertIsString($result);
-        $this->assertStringNotContainsString("{{first_name}}", $result);
-        $this->assertStringNotContainsString("{{last_name}}", $result);
+        // Check that all template variables are replaced (no braces remain)
+        $this->assertStringNotContainsString("{{", $result);
+        $this->assertStringNotContainsString("}}", $result);
     }
 
     /**
@@ -253,16 +299,20 @@ class TemplatesTest extends TestCase
      */
     public function test_get_handles_numeric_values(): void
     {
-        $result = $this->templates->get(
+        $vars = $this->getTemplateVarsWithValues(
             TemplateName::OWNER_REGISTRATION_NOTIFICATION,
             [
-                "first_name" => "Test",
-                "last_name" => "User",
+                "name" => "Test User",
                 "email" => "test@example.com",
                 "phone" => 5551234567, // numeric
                 "class" => "Class 101", // string with numbers
                 "registration_datetime" => "2026-02-01"
             ]
+        );
+
+        $result = $this->templates->get(
+            TemplateName::OWNER_REGISTRATION_NOTIFICATION,
+            $vars
         );
 
         $this->assertStringContainsString("5551234567", $result);
@@ -275,13 +325,11 @@ class TemplatesTest extends TestCase
      */
     public function test_get_replaces_all_instances_of_repeated_variables(): void
     {
-        $testFirstName = "UniqueFirstName123";
-        $testLastName = "UniqueLastName456";
-        $result = $this->templates->get(
+        $testName = "UniqueTestName123";
+        $vars = $this->getTemplateVarsWithValues(
             TemplateName::OWNER_REGISTRATION_NOTIFICATION,
             [
-                "first_name" => $testFirstName,
-                "last_name" => $testLastName,
+                "name" => $testName,
                 "email" => "test@example.com",
                 "phone" => "555-0000",
                 "class" => "Test Class",
@@ -289,15 +337,20 @@ class TemplatesTest extends TestCase
             ]
         );
 
-        // Count occurrences - the name variables may appear multiple times in owner template
-        $firstNameOccurrences = substr_count($result, $testFirstName);
-        $lastNameOccurrences = substr_count($result, $testLastName);
-        $this->assertGreaterThanOrEqual(1, $firstNameOccurrences);
-        $this->assertGreaterThanOrEqual(1, $lastNameOccurrences);
+        $result = $this->templates->get(
+            TemplateName::OWNER_REGISTRATION_NOTIFICATION,
+            $vars
+        );
+
+        // Count occurrences - variables may appear multiple times in template
+        $nameOccurrences = substr_count($result, $testName);
+        $this->assertGreaterThanOrEqual(1, $nameOccurrences);
 
         // Ensure no unreplaced instances remain
-        $this->assertStringNotContainsString("{{first_name}}", $result);
-        $this->assertStringNotContainsString("{{last_name}}", $result);
+        $templateVars = $this->templates->get_template_vars(TemplateName::OWNER_REGISTRATION_NOTIFICATION);
+        foreach ($templateVars as $var) {
+            $this->assertStringNotContainsString("{{{$var}}}", $result);
+        }
     }
 
     /**
@@ -305,16 +358,17 @@ class TemplatesTest extends TestCase
      */
     public function test_get_preserves_whitespace_in_values(): void
     {
+        $vars = $this->getTemplateVarsWithValues(
+            TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
+            ["name" => "  First With  Spaces  "]
+        );
+
         $result = $this->templates->get(
             TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
-            [
-                "first_name" => "  First With  Spaces  ",
-                "last_name" => "  Last With  Spaces  "
-            ]
+            $vars
         );
 
         $this->assertStringContainsString("  First With  Spaces  ", $result);
-        $this->assertStringContainsString("  Last With  Spaces  ", $result);
     }
 
     /**
@@ -322,39 +376,46 @@ class TemplatesTest extends TestCase
      */
     public function test_template_variable_keys_are_case_sensitive(): void
     {
-        $result = $this->templates->get(
+        $vars = $this->getTemplateVarsWithValues(
             TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
             [
-                "FIRST_NAME" => "Wrong",     // Wrong case
-                "first_name" => "Correct",   // Correct case
-                "LAST_NAME" => "Wrong",      // Wrong case
-                "last_name" => "Case"        // Correct case
+                "NAME" => "Wrong",     // Wrong case
+                "name" => "Correct Case"   // Correct case
             ]
         );
 
+        $this->expectException(TemplateRenderException::class);
+        $result = $this->templates->get(
+            TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
+            $vars
+        );
+
         $this->assertStringContainsString("Correct", $result);
-        $this->assertStringContainsString("Case", $result);
         $this->assertStringNotContainsString("Wrong", $result);
     }
 
     /**
-     * Test that extra template variables (not in template) don't cause errors.
+     * Test that extra template variables (not in template) throw an exception.
+     * Based on requirement: failure is when not all vars in $template_vars are used.
      */
-    public function test_get_ignores_extra_template_variables(): void
+    public function test_get_throws_exception_for_extra_template_variables(): void
     {
-        $result = $this->templates->get(
+        $this->expectException(TemplateRenderException::class);
+        $this->expectExceptionMessage("not found in template");
+
+        $vars = $this->getTemplateVarsWithValues(
             TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
             [
-                "first_name" => "John",
-                "last_name" => "Doe",
-                "extra_var_1" => "Should be ignored",
-                "extra_var_2" => "Also ignored"
+                "name" => "John Doe",
+                "extra_var_1" => "Should cause error",
+                "extra_var_2" => "Also cause error"
             ]
         );
 
-        $this->assertIsString($result);
-        $this->assertStringContainsString("John", $result);
-        $this->assertStringContainsString("Doe", $result);
+        $this->templates->get(
+            TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
+            $vars
+        );
     }
 
     /**
@@ -362,24 +423,30 @@ class TemplatesTest extends TestCase
      */
     public function test_different_templates_return_different_content(): void
     {
-        $clientResult = $this->templates->get(
+        $clientVars = $this->getTemplateVarsWithValues(
             TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
-            [
-                "first_name" => "Test",
-                "last_name" => "User"
-            ]
+            ["name" => "Test User"]
         );
 
-        $ownerResult = $this->templates->get(
+        $ownerVars = $this->getTemplateVarsWithValues(
             TemplateName::OWNER_REGISTRATION_NOTIFICATION,
             [
-                "first_name" => "Test",
-                "last_name" => "User",
+                "name" => "Test User",
                 "email" => "test@example.com",
                 "phone" => "555-0000",
                 "class" => "Test",
                 "registration_datetime" => "2026-02-01"
             ]
+        );
+
+        $clientResult = $this->templates->get(
+            TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
+            $clientVars
+        );
+
+        $ownerResult = $this->templates->get(
+            TemplateName::OWNER_REGISTRATION_NOTIFICATION,
+            $ownerVars
         );
 
         $this->assertNotEquals($clientResult, $ownerResult);
@@ -396,12 +463,14 @@ class TemplatesTest extends TestCase
      */
     public function test_get_returns_valid_html(): void
     {
+        $vars = $this->getTemplateVarsWithValues(
+            TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
+            ["name" => "Test User"]
+        );
+
         $result = $this->templates->get(
             TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
-            [
-                "first_name" => "Test",
-                "last_name" => "User"
-            ]
+            $vars
         );
 
         $this->assertStringContainsString("<!DOCTYPE html>", $result);
@@ -434,12 +503,14 @@ class TemplatesTest extends TestCase
      */
     public function test_template_contains_expected_branding(): void
     {
+        $vars = $this->getTemplateVarsWithValues(
+            TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
+            ["name" => "Test User"]
+        );
+
         $result = $this->templates->get(
             TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION,
-            [
-                "first_name" => "Test",
-                "last_name" => "User"
-            ]
+            $vars
         );
 
         $this->assertStringContainsString("Go-Diva", $result);
