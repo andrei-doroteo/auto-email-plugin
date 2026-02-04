@@ -37,7 +37,7 @@ class Api {
 	/**
 	 * @return void
 	 *
-	 * Register's the '/auto-email/v1/send-mail' endpoint to the WordPress REST API.
+	 * Register's the '/auto-email/v1/submit/register-form' endpoint to the WordPress REST API.
 	 */
 	function register_send_email_endpoint(): void {
 
