@@ -5,6 +5,7 @@ namespace DoroteoDigital\AutoEmail\templates;
 use DoroteoDigital\AutoEmail\templates\exceptions\TemplateNotFoundException;
 use DoroteoDigital\AutoEmail\templates\exceptions\TemplateFileException;
 use DoroteoDigital\AutoEmail\templates\exceptions\TemplateRenderException;
+use DoroteoDigital\AutoEmail\templates\exceptions\TemplateFileEmptyException;
 
 /**
  * This file serves as an abstraction to get filled in email templates.
@@ -44,6 +45,12 @@ class Templates {
 		   - Implement a cache for each request to optimize
 		   for multiple template file reads in one request.
 	*/
+
+	/**
+	 * Regex pattern to match template variables in the format {{variable_name}}
+	 * Allows optional whitespace around the variable name.
+	 */
+	private const TEMPLATE_VAR_PATTERN = '/\{\s*\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\s*\}/';
 
 	/**
 	 * The base path for the template.html files.
@@ -92,11 +99,11 @@ class Templates {
 			};
 		}
 
-		// get file
-		$this->get_raw_template( $template->getPath() );
-		// replace template vars
-		// return result
-		return ""; // stub
+		// Get the raw template from disk
+		$raw_template = $this->get_raw_template( $template->getPath() );
+
+		// Replace template variables and return the result
+		return $this->fill_template_variables( $raw_template, $template_variables, $fallback );
 	}
 
 	/**
@@ -110,9 +117,25 @@ class Templates {
 	 * @return string The raw template content.
 	 *
 	 * @throws TemplateFileException If the file doesn't exist or cannot be read.
+	 * @throws TemplateFileEmptyException If the file is empty.
 	 */
 	private function get_raw_template( string $file_path ): string {
-		return file_get_contents( "$this->base_path/$file_path" );
+		$full_path = "$this->base_path/$file_path";
+
+		// Attempt to read the file
+		$content = @file_get_contents( $full_path );
+
+		// If file_get_contents returns false, it means the file couldn't be read
+		if ( $content === false ) {
+			throw new TemplateFileException( "Failed to read template file: $file_path" );
+		}
+
+		// Check if the file is empty
+		if ( empty( $content ) ) {
+			throw new TemplateFileEmptyException( "Template file is empty: $file_path" );
+		}
+
+		return $content;
 	}
 
 	/**
@@ -127,10 +150,44 @@ class Templates {
 	 *
 	 * @return string The given template with template variables replaced.
 	 *
-	 * @throws TemplateRenderException If template variable replacement fails.
+	 * @throws TemplateRenderException If provided template variable map has unused variables.
 	 */
 	private function fill_template_variables( string $template, array $template_vars, callable $fallback ): string {
-		return ""; // stub
+		// If template is empty, return empty string
+		if ( empty( $template ) ) {
+			return "";
+		}
+
+		// Track which variables from $template_vars are used
+		$used_vars = array();
+
+		// Replace all template variables
+		$result = preg_replace_callback(
+			self::TEMPLATE_VAR_PATTERN,
+			function ( $matches ) use ( $template_vars, $fallback, &$used_vars ) {
+				$var_name = $matches[1]; // The captured variable name without braces
+
+				// Check if this variable has a replacement in $template_vars
+				if ( array_key_exists( $var_name, $template_vars ) ) {
+					$used_vars[ $var_name ] = true;
+
+					return $template_vars[ $var_name ];
+				}
+
+				// Otherwise, use the fallback function
+				return $fallback( $var_name );
+			},
+			$template
+		);
+
+		// Check if all variables in $template_vars were used
+		foreach ( array_keys( $template_vars ) as $key ) {
+			if ( ! isset( $used_vars[ $key ] ) ) {
+				throw new TemplateRenderException( "Template variable '$key' was provided but not found in template" );
+			}
+		}
+
+		return $result;
 	}
 
 	/**
@@ -148,9 +205,8 @@ class Templates {
 		// Get the raw template content
 		$templateContent = $this->get_raw_template( $template->getPath() );
 
-		// Find all template variables using regex pattern {{variable_name}}
-		// The pattern matches {{ followed by a valid variable name, followed by }}
-		preg_match_all( '/\{\s*\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\s*\}/', $templateContent, $matches );
+		// Find all template variables using regex pattern
+		preg_match_all( self::TEMPLATE_VAR_PATTERN, $templateContent, $matches );
 
 		// $matches[1] contains the captured variable names without braces
 		// Return unique values only and re-index the array
