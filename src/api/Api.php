@@ -143,6 +143,57 @@ class Api {
 	 * @return void
 	 */
 	function submit_contact_form( WP_REST_Request $request ): void {
-		wp_send_json_success(['message' => 'endpoint reached']);
+		$data = $request->get_params();
+
+		if ( ! isset( $data['first_name'], $data['last_name'], $data['email'], $data['phone'], $data['interest'], $data['message'] ) ) {
+			wp_send_json_error( [ "error" => "missing_fields", "given_fields" => $data ], 400 );
+
+			return;
+		}
+
+		try {
+			$customer_email = $this->templates->get( TemplateName::CUSTOMER_CONTACT_NOTIFICATION, [
+				'first_name'    => $data['first_name'],
+				'last_name'     => $data['last_name'],
+				'email'         => $data['email'],
+				'phone'         => $data['phone'],
+				'interest' => $data['interest'],
+				'message'       => $data['message']
+			], [
+				$this,
+				'fallback'
+			] );
+			$owner_email    = $this->templates->get( TemplateName::OWNER_CONTACT_NOTIFICATION, [
+				'first_name'          => $data['first_name'],
+				'last_name'           => $data['last_name'],
+				'submission_datetime' => date( "m-d-Y" ),
+				'email'               => $data['email'],
+				'phone'               => $data['phone'],
+				'interest'       => $data['interest'],
+				'message'             => $data['message']
+			], [
+				$this,
+				'fallback'
+			] );
+		} catch ( TemplateException $e ) {
+			wp_send_json_error( [ "error" => "$e" ], 500 );
+
+			return;
+		}
+
+		add_filter( 'wp_mail_content_type', function () {
+			return 'text/html';
+		} );
+		$customer_success = wp_mail( $data['email'], "Go-Diva's Pole Dance For Fitness", $customer_email );
+		$owner_success    = wp_mail( $this->plugin_options->get_business_owner_email(), "Go-Diva's Pole Dance For Fitness", $owner_email );
+		if ( ! $customer_success || ! $owner_success ) {
+			wp_send_json_error( [ "error" => "one or more emails failed to send." ], 500 );
+
+			return;
+		}
+//
+		wp_send_json_success( [ "message" => "emails sent successfully." ] );
+
+
 	}
 }
