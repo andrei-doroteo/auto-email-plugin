@@ -47,7 +47,7 @@ class Api {
 
 			register_rest_route( $this->base_path, $register_form_route, [
 				'methods'             => [ 'POST', 'OPTIONS' ],
-				'callback'            => [ $this, "send_email" ],
+				'callback'            => [ $this, "submit_register_form" ],
 				'permission_callback' => '__return_true', // public endpoint
 			] );
 		} );
@@ -64,7 +64,7 @@ class Api {
 	 * TODO:
 	 *      - Change endpoint to email-notify
 	 */
-	function send_email( WP_REST_Request $request ): void {
+	function submit_register_form( WP_REST_Request $request ): void {
 		$data = $request->get_params();
 
 		if ( ! isset( $data['first_name'], $data['last_name'], $data['email'], $data['phone'], $data['class'] ) ) {
