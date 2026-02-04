@@ -20,6 +20,8 @@ use DoroteoDigital\AutoEmail\templates\exceptions\TemplateFileEmptyException;
 enum TemplateName: string {
 	case CUSTOMER_REGISTRATION_NOTIFICATION = "templates/client-confirmation.template.html";
 	case OWNER_REGISTRATION_NOTIFICATION = "templates/owner-registration-confirmation.template.html";
+	case CUSTOMER_CONTACT_NOTIFICATION = "templates/client-contact-form.template.html";
+	case OWNER_CONTACT_NOTIFICATION = "templates/owner-contact-form.template.html";
 
 	/**
 	 * Get the file path for a given template.
