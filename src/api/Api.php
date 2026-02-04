@@ -31,7 +31,7 @@ class Api {
 		$this->plugin_options = PluginOptions::getInstance();
 		$this->templates      = new Templates( rtrim( plugin_dir_path( __DIR__ ), '/' ) );
 
-		$this->register_send_email_endpoint();
+		$this->register_register_form();
 	}
 
 	/**
@@ -39,7 +39,7 @@ class Api {
 	 *
 	 * Register's the '/auto-email/v1/submit/register-form' endpoint to the WordPress REST API.
 	 */
-	function register_send_email_endpoint(): void {
+	function register_register_form(): void {
 
 		$register_form_route = "/submit/register-form";
 
