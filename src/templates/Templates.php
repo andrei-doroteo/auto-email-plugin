@@ -127,7 +127,7 @@ class Templates {
 
 		// If file_get_contents returns false, it means the file couldn't be read
 		if ( $content === false ) {
-			throw new TemplateFileException( "Failed to read template file: $file_path" );
+			throw new TemplateFileException( "Failed to read template file: $full_path" );
 		}
 
 		// Check if the file is empty
