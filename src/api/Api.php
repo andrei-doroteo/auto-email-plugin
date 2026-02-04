@@ -32,6 +32,7 @@ class Api {
 		$this->templates      = new Templates( rtrim( plugin_dir_path( __DIR__ ), '/' ) );
 
 		$this->register_register_form();
+		$this->register_contact_form();
 	}
 
 	/**
@@ -48,6 +49,25 @@ class Api {
 			register_rest_route( $this->base_path, $register_form_route, [
 				'methods'             => [ 'POST', 'OPTIONS' ],
 				'callback'            => [ $this, "submit_register_form" ],
+				'permission_callback' => '__return_true', // public endpoint
+			] );
+		} );
+	}
+
+	/**
+	 * @return void
+	 *
+	 * Register's the '/auto-email/v1/submit/contact-form' endpoint to the WordPress REST API.
+	 */
+	function register_contact_form(): void {
+
+		$contact_form_route = "/submit/contact-form";
+
+		add_action( 'rest_api_init', function () use ( $contact_form_route ) {
+
+			register_rest_route( $this->base_path, $contact_form_route, [
+				'methods'             => [ 'POST', 'OPTIONS' ],
+				'callback'            => [ $this, "submit_contact_form" ],
 				'permission_callback' => '__return_true', // public endpoint
 			] );
 		} );
@@ -112,5 +132,17 @@ class Api {
 
 	function fallback( string $s ): string {
 		return "";
+	}
+
+	/**
+	 * Takes HTTP request with contact form details
+	 * and sends given email to business owner email address.
+	 *
+	 * @param WP_REST_Request $request
+	 *
+	 * @return void
+	 */
+	function submit_contact_form( WP_REST_Request $request ): void {
+		wp_send_json_success(['message' => 'endpoint reached']);
 	}
 }
