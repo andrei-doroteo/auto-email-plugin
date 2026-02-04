@@ -3,7 +3,7 @@
  * This file contains helper functions to interact with the WordPress API.
  */
 
-namespace DoroteoDigital\AutoEmail\Api\Utils;
+namespace DoroteoDigital\AutoEmail\api\utils;
 
 /**
  * @param string $namespace The base path after the WordPress installation's domain name (i.e. "/plugin/v1").

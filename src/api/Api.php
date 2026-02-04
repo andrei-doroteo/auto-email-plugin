@@ -1,6 +1,6 @@
 <?php
 // TODO: This is a rough draft.
-namespace DoroteoDigital\AutoEmail\Api;
+namespace DoroteoDigital\AutoEmail\api;
 
 use DoroteoDigital\AutoEmail\parser\Parser;
 use WP_REST_Response;
