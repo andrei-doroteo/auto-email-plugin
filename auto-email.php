@@ -55,14 +55,8 @@ function auto_email_styles(): void {
 	);
 }
 
-function add_cors_http_header() {
-	header( "Access-Control-Allow-Origin: *" ); // !!! Change in Prod
-	header( 'Access-Control-Allow-Methods: POST, OPTIONS' );
-	header( 'Access-Control-Allow-Headers: Content-Type, Authorization' );
-	header( 'Access-Control-Max-Age: 86400' ); // 24hrs
+// Load admin page scripts
+if ( is_admin() ) {
+	add_action( 'admin_enqueue_scripts', 'auto_email_settings' );
+	add_action( 'admin_enqueue_scripts', 'auto_email_styles' );
 }
-
-// Hook functions into WordPress
-add_action( 'init', 'add_cors_http_header' );
-add_action( 'admin_enqueue_scripts', 'auto_email_settings' );
-add_action( 'admin_enqueue_scripts', 'auto_email_styles' );
