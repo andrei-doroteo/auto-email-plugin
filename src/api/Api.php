@@ -6,7 +6,9 @@ use DoroteoDigital\AutoEmail\admin\PluginOptions;
 use DoroteoDigital\AutoEmail\templates\exceptions\TemplateException;
 use DoroteoDigital\AutoEmail\templates\TemplateName;
 use DoroteoDigital\AutoEmail\templates\Templates;
+use WP_HTTP_Response;
 use WP_REST_Request;
+use WP_REST_Server;
 
 /**
  * This class must be initialized at the entry point of the plugin.
@@ -31,6 +33,7 @@ class Api {
 		$this->plugin_options = PluginOptions::getInstance();
 		$this->templates      = new Templates( rtrim( plugin_dir_path( __DIR__ ), '/' ) );
 
+		$this->init_cors_headers();
 		$this->register_register_form();
 		$this->register_contact_form();
 	}
@@ -153,12 +156,12 @@ class Api {
 
 		try {
 			$customer_email = $this->templates->get( TemplateName::CUSTOMER_CONTACT_NOTIFICATION, [
-				'first_name'    => $data['first_name'],
-				'last_name'     => $data['last_name'],
-				'email'         => $data['email'],
-				'phone'         => $data['phone'],
-				'interest' => $data['interest'],
-				'message'       => $data['message']
+				'first_name' => $data['first_name'],
+				'last_name'  => $data['last_name'],
+				'email'      => $data['email'],
+				'phone'      => $data['phone'],
+				'interest'   => $data['interest'],
+				'message'    => $data['message']
 			], [
 				$this,
 				'fallback'
@@ -169,7 +172,7 @@ class Api {
 				'submission_datetime' => date( "m-d-Y" ),
 				'email'               => $data['email'],
 				'phone'               => $data['phone'],
-				'interest'       => $data['interest'],
+				'interest'            => $data['interest'],
 				'message'             => $data['message']
 			], [
 				$this,
@@ -195,5 +198,42 @@ class Api {
 		wp_send_json_success( [ "message" => "emails sent successfully." ] );
 
 
+	}
+
+	/** Adds Cors heaader when making requests to plugin API */
+	private function init_cors_headers() {
+
+		/**
+		 * Conditionally adds CORS headers if request is to the plugin's API.
+		 *
+		 * @param bool $served
+		 * @param WP_HTTP_Response $result
+		 * @param WP_REST_Request $request
+		 * @param WP_REST_Server $server
+		 *
+		 * @return bool Whether request was served or not.
+		 */
+		$handle_rest_requests = function ( bool $served, WP_HTTP_Response $result, WP_REST_Request $request, WP_REST_Server $server ): bool {
+			if ( str_contains( $request->get_route(), $this->base_path ) ) {
+				$server->send_header( 'Access-Control-Allow-Origin', '*' ); // !!! Change in Prod
+				$server->send_header( 'Access-Control-Allow-Methods', 'POST, OPTIONS' );
+				$server->send_header( 'Access-Control-Allow-Headers', 'Content-Type' );
+				$server->send_header( 'Access-Control-Max-Age', '86400' ); // 24hrs
+			}
+
+			// Exit on OPTIONS requests
+			if ( $request->get_method() === 'OPTIONS' ) {
+				status_header( 200 );
+				exit;
+			}
+
+			return $served;
+		};
+
+		$add_cors_headers = function () use ( $handle_rest_requests ): void {
+			add_filter( 'rest_pre_serve_request', $handle_rest_requests, 10, 4 );
+		};
+
+		add_action( 'rest_api_init', $add_cors_headers );
 	}
 }
