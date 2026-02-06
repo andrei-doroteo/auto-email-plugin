@@ -2,7 +2,6 @@
 
 namespace DoroteoDigital\AutoEmail\templates;
 
-use DoroteoDigital\AutoEmail\templates\exceptions\TemplateNotFoundException;
 use DoroteoDigital\AutoEmail\templates\exceptions\TemplateFileException;
 use DoroteoDigital\AutoEmail\templates\exceptions\TemplateRenderException;
 use DoroteoDigital\AutoEmail\templates\exceptions\TemplateFileEmptyException;
@@ -42,11 +41,6 @@ enum TemplateName: string {
  *      $templates->get(TemplateName::TEMPLATE_NAME_HERE);
  */
 class Templates {
-	/*
-	   TODO:
-		   - Implement a cache for each request to optimize
-		   for multiple template file reads in one request.
-	*/
 
 	/**
 	 * Regex pattern to match template variables in the format {{variable_name}}
@@ -124,15 +118,12 @@ class Templates {
 	private function get_raw_template( string $file_path ): string {
 		$full_path = "$this->base_path/$file_path";
 
-		// Attempt to read the file
 		$content = @file_get_contents( $full_path );
 
-		// If file_get_contents returns false, it means the file couldn't be read
 		if ( $content === false ) {
 			throw new TemplateFileException( "Failed to read template file: $full_path" );
 		}
 
-		// Check if the file is empty
 		if ( empty( $content ) ) {
 			throw new TemplateFileEmptyException( "Template file is empty: $file_path" );
 		}
@@ -155,12 +146,11 @@ class Templates {
 	 * @throws TemplateRenderException If provided template variable map has unused variables.
 	 */
 	private function fill_template_variables( string $template, array $template_vars, callable $fallback ): string {
-		// If template is empty, return empty string
+
 		if ( empty( $template ) ) {
 			return "";
 		}
 
-		// Track which variables from $template_vars are used
 		$used_vars = array();
 
 		// Replace all template variables
@@ -204,7 +194,7 @@ class Templates {
 	 * @return array Array of unique template variable names (without braces).
 	 */
 	public function get_template_vars( TemplateName $template ): array {
-		// Get the raw template content
+
 		$templateContent = $this->get_raw_template( $template->getPath() );
 
 		// Find all template variables using regex pattern
