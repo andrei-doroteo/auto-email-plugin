@@ -49,7 +49,7 @@ class Api {
 
 		add_action( 'rest_api_init', function () use ( $register_form_route ) {
 
-			register_rest_route( $this->base_path, $register_form_route, [
+			register_rest_route( ltrim( $this->base_path, "/" ), $register_form_route, [
 				'methods'             => [ 'POST', 'OPTIONS' ],
 				'callback'            => [ $this, "submit_register_form" ],
 				'permission_callback' => '__return_true', // public endpoint
@@ -68,7 +68,7 @@ class Api {
 
 		add_action( 'rest_api_init', function () use ( $contact_form_route ) {
 
-			register_rest_route( $this->base_path, $contact_form_route, [
+			register_rest_route( ltrim( $this->base_path, "/" ), $contact_form_route, [
 				'methods'             => [ 'POST', 'OPTIONS' ],
 				'callback'            => [ $this, "submit_contact_form" ],
 				'permission_callback' => '__return_true', // public endpoint
