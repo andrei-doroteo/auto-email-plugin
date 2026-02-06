@@ -14,7 +14,7 @@ use DoroteoDigital\AutoEmail\templates\exceptions\TemplateFileEmptyException;
  * Enum representing available email templates.
  *
  * Each case holds the path to it's template file from the `src/` directory.
- * Use this enum when calling Templates::get() to ensure type safety.
+ * Use this enum when calling $templates->get to ensure type safety.
  */
 enum TemplateName: string {
 	case CUSTOMER_REGISTRATION_NOTIFICATION = "templates/client-confirmation.template.html";
@@ -72,7 +72,7 @@ class Templates {
 	 * - If there are template vars with no given replacement
 	 * they are replaced with $fallback.
 	 *
-	 * Example Usage: Template->get(TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION, ["name" => "Jane"], function (string $s):string {return "User";});
+	 * Example Usage: $templates->get(TemplateName::CUSTOMER_REGISTRATION_NOTIFICATION, ["name" => "Jane"], function (string $s):string {return "User";});
 	 *
 	 * @param TemplateName $template The template enum case to use.
 	 * @param array $template_variables An associative array of key-value pairs for template vars.
